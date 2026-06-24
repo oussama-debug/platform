@@ -1,33 +1,29 @@
 import Image from "next/image";
+import type { Link } from "@repo/api";
 import { Card } from "@repo/ui/card";
 import { Gradient } from "@repo/ui/gradient";
 import { TurborepoLogo } from "@repo/ui/turborepo-logo";
 
-const LINKS = [
-  {
-    title: "Docs",
-    href: "https://turborepo.dev/docs",
-    description: "Find in-depth information about Turborepo features and API.",
-  },
-  {
-    title: "Learn",
-    href: "https://turborepo.dev/docs/handbook",
-    description: "Learn more about monorepos with our handbook.",
-  },
-  {
-    title: "Templates",
-    href: "https://turborepo.dev/docs/getting-started/from-example",
-    description: "Choose from over 15 examples and deploy with a single click.",
-  },
-  {
-    title: "Deploy",
-    href: "https://vercel.com/new",
-    description:
-      "Instantly deploy your Turborepo to a shareable URL with Vercel.",
-  },
-];
+async function getLinks(): Promise<Link[]> {
+  try {
+    const res = await fetch("http://localhost:3000/links", {
+      cache: "no-store",
+    });
 
-export default function Page() {
+    if (!res.ok) {
+      throw new Error("Failed to fetch links");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching links:", error);
+    return [];
+  }
+}
+
+export default async function Page() {
+  const links = await getLinks();
+
   return (
     <main className="flex flex-col items-center justify-between min-h-screen p-24">
       <div className="z-10 items-center justify-between w-full max-w-5xl font-mono text-sm lg:flex">
@@ -105,11 +101,18 @@ export default function Page() {
       </div>
 
       <div className="grid mb-32 text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        {LINKS.map(({ title, href, description }) => (
-          <Card href={href} key={title} title={title}>
-            {description}
-          </Card>
-        ))}
+        {links.length > 0 ? (
+          links.map(({ id, title, url, description }) => (
+            <Card href={url} key={id} title={title}>
+              {description}
+            </Card>
+          ))
+        ) : (
+          <p className="text-neutral-500 lg:col-span-4">
+            No links available. Make sure the NestJS API is running on port
+            3000.
+          </p>
+        )}
       </div>
     </main>
   );
